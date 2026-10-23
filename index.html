@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Languages</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Patrick+Hand&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#FBF8F2;--card:#fff;--ink:#23232B;--mute:#5E5E68;--sage:#D3E8DA;--pink:#F6D9D5;--but:#F9E7A8;--acc:#8EC9B0;--sh:#23232B;--line:#CFC9BC;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1D1D22;--card:#26262D;--ink:#EFEFEA;--mute:#A5A5AF;--sage:#2F4A40;--pink:#4F3A3D;--but:#54482B;--acc:#6DB8A8;--sh:#000;--line:#454550}}
+:root[data-theme="dark"]{--bg:#1D1D22;--card:#26262D;--ink:#EFEFEA;--mute:#A5A5AF;--sage:#2F4A40;--pink:#4F3A3D;--but:#54482B;--acc:#6DB8A8;--sh:#000;--line:#454550}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Patrick Hand","Comic Sans MS",system-ui,sans-serif;font-size:1.15rem;line-height:1.4;background-image:repeating-linear-gradient(transparent 0 29px,rgba(128,128,150,.15) 29px 30px)}
+main{max-width:640px;margin:0 auto;padding:18px 16px 110px}
+[hidden]{display:none!important}
+h1,h2,.big{font-family:Caveat,cursive;font-weight:700;margin:0}
+h1{font-size:3rem;line-height:1}h2{font-size:1.8rem}.big{font-size:2.6rem;word-break:break-word}
+.row{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.box{border:2px solid var(--ink);border-radius:14px 20px 16px 22px/20px 14px 22px 16px;background:var(--card);padding:14px;margin:12px 0;box-shadow:3px 3px 0 var(--sh)}
+.s{background:var(--sage)}.p{background:var(--pink)}.y{background:var(--but)}
+.mute{color:var(--mute);font-size:1rem;margin:4px 0}
+input[type=text],input[type=url],input[type=email],input[type=password],select,textarea{width:100%;font:inherit;color:var(--ink);background:var(--card);border:2px solid var(--ink);border-radius:10px 14px 10px 14px/14px 10px 14px 10px;padding:9px 11px;margin:4px 0}
+select{width:auto}
+.btn,.ghost{font:inherit;color:var(--ink);border:2px solid var(--ink);border-radius:12px 18px 13px 17px/17px 12px 18px 13px;padding:10px 16px;cursor:pointer;box-shadow:2px 3px 0 var(--sh);background:var(--sage)}
+.ghost{background:transparent}.btn:active,.ghost:active{transform:translate(2px,3px);box-shadow:none}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,a:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.bar{height:18px;border:2px solid var(--ink);border-radius:8px;background:var(--card);overflow:hidden;margin:8px 0}
+.bar i{display:block;height:100%;background:var(--acc);border-right:2px solid var(--ink)}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}
+.grid4 button{padding:8px 2px;font-size:1rem;line-height:1.2}
+.tabs{position:fixed;left:0;right:0;bottom:0;display:flex;gap:4px;background:var(--card);border-top:2px solid var(--ink);padding:8px 6px calc(8px + env(safe-area-inset-bottom,0px))}
+.tabs button{flex:1;font:inherit;font-size:1rem;color:var(--ink);background:none;border:2px solid transparent;border-radius:12px;padding:10px 0;cursor:pointer}
+.tabs .on{background:var(--but);border-color:var(--ink)}
+.item{display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap;border-top:1px dashed var(--line);padding:8px 0}
+.item:first-child{border-top:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.chip{font:inherit;font-size:1rem;color:var(--ink);background:var(--card);border:2px solid var(--ink);border-radius:12px 16px 12px 16px/16px 12px 16px 12px;padding:5px 12px;cursor:pointer}
+.chip.on{background:var(--but)}
+.ck{display:inline-flex;gap:4px;align-items:center;margin-right:10px;font-size:1rem}
+ol{margin:6px 0;padding-left:22px}
+a{color:var(--ink)}
+</style>
+</head>
+<body>
+<main>
+<section id="auth" hidden><h1>Languages</h1><div class="box"><p class="mute">Sign in to sync your cards and minutes across all your devices.</p><form id="af"><input type="email" id="ae" placeholder="Email" autocomplete="email" required aria-label="Email"><input type="password" id="ap" placeholder="Password (min. 6 characters)" autocomplete="current-password" required aria-label="Password"><div class="row" style="margin-top:8px"><button class="btn" type="submit">Sign in</button><button class="ghost" type="button" id="ac">Create account</button></div></form><p id="am" class="mute" role="status"></p></div></section>
+<div id="app">
+<div class="row"><h1>Languages</h1><span><select id="lang" aria-label="Language"></select> <button class="ghost" id="al" type="button" aria-label="Add language">+</button> <button class="ghost" id="so" type="button">Sign out</button></span></div>
+<p class="mute" id="sync"></p>
+<form id="lf" class="box" hidden><label class="mute" for="ls">New language</label><select id="ls"></select> <button class="btn" type="submit">Add</button></form>
+<section id="v-today"></section>
+<section id="v-rev" hidden></section>
+<section id="v-cards" hidden></section>
+<section id="v-src" hidden></section>
+<section id="v-week" hidden></section>
+</div>
+</main>
+<nav class="tabs"><button data-t="today" class="on">Today</button><button data-t="rev">Review</button><button data-t="cards">Cards</button><button data-t="src">Sources</button><button data-t="week">Week</button></nav>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+(function(){
+var SB_URL="https://vkmbbkfknrhmualrqnpg.supabase.co",SB_KEY="sb_publishable_hxXOEN3ctL0qaltOg-yaXg_-kIzF2Sc",sb=null,user=null,timer=null;
+var KEY="idiomas:v1",GOAL=45,NEWMAX=8,S,R={on:false,q:[],show:false},DEL=null,SF="all";
+var LANGS=[["en-US","English"],["es-ES","Spanish"],["fr-FR","French"],["ko-KR","Korean"],["de-DE","German"],["it-IT","Italian"],["ja-JP","Japanese"]],LN={};
+LANGS.forEach(function(l){LN[l[0]]=l[1]});
+var SK=["listening","reading","speaking","writing","vocabulary","test"];
+var PL=[
+["Weekly review",["speaking"],["Review this week’s cards","Record a 3-minute talk about your week","Plan next week’s blocks"]],
+["Listening",["listening"],["Pick one B1/B2 audio","Listen once without the transcript","Listen again with the transcript and note 5 new words","Say 3 sentences out loud about what you heard"]],
+["Reading",["reading"],["Read one story or chapter (20 min)","Mark 5 to 8 unknown words in context","Add them as cards, with the sentence you found them in"]],
+["Speaking",["speaking"],["Choose a topic and 5 questions","Answer each one out loud and record yourself","Listen back and note 2 things to fix","Add 3 new words to your cards"]],
+["Writing",["writing"],["Write 10 to 15 lines about your week","Use at least 5 words from this week’s cards","Read it aloud and fix what sounds off"]],
+["Speaking + games",["speaking","vocabulary"],["Redo Wednesday’s topic using the new words","Then play a vocabulary game for 10 min"]],
+["Light reading",["reading"],["Read for pleasure, no dictionary","Only save words that block your understanding"]]];
+var DN=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+var SEED=[
+["British Council LearnEnglish","https://learnenglish.britishcouncil.org/",["listening","reading","writing","speaking"],"Free and official, A1 to C1. Pick your level."],
+["ESL Conversation Questions","https://www.eslconversationquestions.com/",["speaking"],"Question lists by topic. Answer aloud and record."],
+["LingoStories","https://lingostories.org/en/",["reading"],"Interactive stories where your choices shape the plot."],
+["PONN.IO","https://ponn.io/",["reading","vocabulary"],"Books with parallel translation, plus games."],
+["Knoword","https://knoword.com",["vocabulary"],"Definition game with typed answers, against the clock."],
+["Project Gutenberg","https://www.gutenberg.org/",["reading"],"Free public-domain books. The English is older."],
+["EF SET","https://www.efset.org/",["test"],"Free CEFR level test, 50 or 90 min. Speaking and writing are AI-graded."],
+["Cambridge Test Your English","https://www.cambridgeenglish.org/test-your-english/",["test"],"Quick, free estimate of your level."],
+["Vocabu","https://vocabu.com.br",["vocabulary"],"Wordle-style word game. Not independently verified."]];
+function $(i){return document.getElementById(i)}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function cap(s){return s.charAt(0).toUpperCase()+s.slice(1)}
+function fd(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function today(){return fd(new Date())}
+function add(iso,n){var d=new Date(iso+"T12:00");d.setDate(d.getDate()+n);return fd(d)}
+function load(){
+  try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){S=null}
+  if(!S||!S.langs)S={cur:"en-US",langs:{"en-US":1},cards:[],log:{}};
+  if(!S.src)S.src=SEED.map(function(x,i){return{id:"s"+i,lang:"en-US",name:x[0],url:x[1],skills:x[2],note:x[3],status:"to try"}});
+}
+function save(){S._u=Date.now();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}push()}
+function mine(){return S.cards.filter(function(c){return c.lang===S.cur})}
+function byId(id){return S.cards.find(function(c){return c.id===id})}
+function mins(d){return(S.log[d]&&S.log[d][S.cur])||0}
+function streak(){var n=0,d=today();if(mins(d)<GOAL)d=add(d,-1);while(mins(d)>=GOAL){n++;d=add(d,-1)}return n}
+function counts(){var t=today(),m=mine(),s=m.filter(function(c){return c.seen===t}).length;
+return{d:m.filter(function(c){return c.seen&&c.due<=t}).length,n:Math.min(m.filter(function(c){return !c.seen}).length,Math.max(0,NEWMAX-s))}}
+function nxt(c,g){
+  if(g===0)return{reps:0,int:0,ease:Math.max(1.3,c.ease-.2)};
+  var r=c.reps+1,i;
+  if(r===1)i=[0,1,1,3][g];else if(r===2)i=[0,3,6,8][g];
+  else i=Math.max(c.int+1,Math.round(c.int*[0,1.2,c.ease,c.ease*1.3][g]));
+  return{reps:r,int:i,ease:g===1?Math.max(1.3,c.ease-.15):g===3?c.ease+.15:c.ease};
+}
+function lab(i){return i<1?"now":i<30?i+" d":i<365?Math.round(i/30)+" mo":(i/365).toFixed(1)+" y"}
+function speak(t){try{var u=new SpeechSynthesisUtterance(t);u.lang=S.cur;u.rate=.9;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
+function srcFor(sk){return S.src.filter(function(s){return s.lang===S.cur&&s.status!=="done"&&s.skills.some(function(k){return sk.indexOf(k)>-1})})}
+function link(s){return'<a href="'+esc(s.url)+'" target="_blank" rel="noopener"><b>'+esc(s.name)+'</b></a>'}
+
+function rToday(){
+  var t=today(),m=mins(t),k=counts(),dw=new Date().getDay(),p=PL[dw],st=streak(),h;
+  h='<div class="box s"><h2>'+DN[dw]+' · '+LN[S.cur]+'</h2><p class="mute">Goal: '+GOAL+' min a day · streak: '+st+(st===1?' day':' days')+'</p>'+
+  '<div class="bar" role="img" aria-label="'+m+' of '+GOAL+' minutes"><i style="width:'+Math.min(100,m/GOAL*100)+'%"></i></div>'+
+  '<div class="row"><b>'+m+' / '+GOAL+' min</b><span><button class="ghost" data-m="-10">−10</button> <button class="ghost" data-m="10">+10</button> <button class="btn" data-m="15">+15</button> <button class="btn" data-m="30">+30</button></span></div></div>'+
+  '<div class="box y"><h2>Vocabulary · 15 min</h2><p>'+k.d+' to review · '+k.n+' new today</p><button class="btn" data-go="rev">Start review</button></div>'+
+  '<div class="box p"><h2>Today’s block · '+p[0]+'</h2><ol>'+p[2].map(function(x){return'<li>'+x+'</li>'}).join("")+'</ol>';
+  var f=srcFor(p[1]).slice(0,4);
+  h+=f.length?'<p class="mute">Sources for this block</p>'+f.map(function(s){return'<div class="item">'+link(s)+'<span class="mute">'+esc(s.note)+'</span></div>'}).join(""):'<p class="mute">No sources for this block yet. Add some in Sources.</p>';
+  $("v-today").innerHTML=h+'</div>';
+}
+function rWeek(){
+  var dow=(new Date().getDay()+6)%7,mon=add(today(),-dow),h='<div class="box">';
+  for(var i=0;i<7;i++){var d=add(mon,i),x=PL[(i+1)%7],mm=mins(d);
+    h+='<div class="item"><span><b>'+DN[(i+1)%7]+'</b> · '+x[0]+(d===today()?' ← today':'')+'</span><span>'+mm+' min'+(mm>=GOAL?' ✓':'')+'</span></div>';}
+  $("v-week").innerHTML='<h2>This week</h2><p class="mute">Every day: 15 min of vocabulary + the day’s block.</p>'+h+'</div>';
+}
+function rCards(){
+  var m=mine().slice().reverse(),h='<div class="box"><form id="cf" autocomplete="off"><input type="text" id="cw" placeholder="Word" required aria-label="Word"><input type="text" id="cs" placeholder="Example sentence" aria-label="Sentence"><input type="text" id="ct" placeholder="Translation" required aria-label="Translation"><input type="text" id="cr" placeholder="Source (optional)" aria-label="Source"><button class="btn" type="submit">Add card</button></form></div>';
+  h+='<div class="box"><b>'+m.length+' cards in '+LN[S.cur]+'</b>';
+  m.slice(0,40).forEach(function(c){h+='<div class="item"><span><b>'+esc(c.w)+'</b> · '+esc(c.t)+'<br><span class="mute">'+(c.seen?(c.due<=today()?'due today':'due '+c.due):'new')+'</span></span><button class="ghost" data-del="'+c.id+'">'+(DEL===c.id?'Confirm':'Remove')+'</button></div>'});
+  h+='</div><div class="box"><b>Backup</b><p class="mute">Your data lives only in this browser. Export now and then and keep the text somewhere safe.</p><textarea id="io" rows="4" aria-label="CSV"></textarea><div class="row"><button class="ghost" id="ex" type="button">Export</button><button class="ghost" id="im" type="button">Import</button></div></div>';
+  $("v-cards").innerHTML=h;
+}
+function rSrc(){
+  var m=S.src.filter(function(s){return s.lang===S.cur&&(SF==="all"||s.skills.indexOf(SF)>-1)});
+  var h='<h2>Sources · '+LN[S.cur]+'</h2><div class="chips">'+["all"].concat(SK).map(function(k){return'<button class="chip'+(k===SF?' on':'')+'" data-sf="'+k+'">'+cap(k)+'</button>'}).join("")+'</div><div class="box">';
+  h+=m.length?m.map(function(s){return'<div class="item"><span>'+link(s)+'<br><span class="mute">'+s.skills.map(cap).join(" · ")+' — '+esc(s.note)+'</span></span><span><select data-ss="'+s.id+'" aria-label="Status">'+["to try","using","done"].map(function(o){return'<option'+(o===s.status?' selected':'')+'>'+o+'</option>'}).join("")+'</select> <button class="ghost" data-sdel="'+s.id+'">'+(DEL===s.id?'Confirm':'Remove')+'</button></span></div>'}).join(""):'<p class="mute">Nothing here yet.</p>';
+  h+='</div><div class="box"><b>Add a source</b><form id="sf" autocomplete="off"><input type="text" id="sn" placeholder="Name" required aria-label="Name"><input type="url" id="su" placeholder="https://…" aria-label="Link"><input type="text" id="so" placeholder="Note (optional)" aria-label="Note"><p>'+SK.map(function(k){return'<label class="ck"><input type="checkbox" name="sk" value="'+k+'"> '+cap(k)+'</label>'}).join("")+'</p><button class="btn" type="submit">Save source</button></form></div>';
+  $("v-src").innerHTML=h;
+}
+function rRev(){
+  var el=$("v-rev"),k=counts();
+  if(!R.on){el.innerHTML='<div class="box y"><h2>Review</h2><p>'+k.d+' to review · '+k.n+' new</p>'+((k.d+k.n)?'<button class="btn" data-start="1">Start</button>':'<p>Nothing due. Add cards in Cards, or log your minutes in Today.</p>')+'</div>';return}
+  var c=byId(R.q[0]);
+  var h='<p class="mute">'+R.q.length+' left</p><div class="box"><div class="big">'+esc(c.w)+'</div><button class="ghost" data-say="1" aria-label="Listen">🔊 Listen</button>';
+  if(!R.show)h+='<div class="grid4" style="grid-template-columns:1fr"><button class="btn" data-show="1">Show answer</button></div>';
+  else{h+='<p>'+(c.s?esc(c.s):'')+'</p><p><b>'+esc(c.t)+'</b></p>'+(c.r?'<p class="mute">Source: '+esc(c.r)+'</p>':'')+'<div class="grid4">';
+    ["Again","Hard","Good","Easy"].forEach(function(n,g){var x=nxt(c,g);h+='<button class="'+(g?'btn':'ghost')+'" data-g="'+g+'">'+n+'<br>'+(g?lab(x.int):'now')+'</button>'});h+='</div>'}
+  el.innerHTML=h+'</div>';
+}
+function start(){
+  var t=today(),k=counts(),m=mine();
+  var d=m.filter(function(c){return c.seen&&c.due<=t}).sort(function(a,b){return a.due<b.due?-1:1}).map(function(c){return c.id});
+  var n=m.filter(function(c){return !c.seen}).slice(0,k.n).map(function(c){return c.id});
+  R={on:true,q:d.concat(n),show:false};rRev();
+}
+function grade(g){
+  var c=byId(R.q.shift()),x=nxt(c,g);
+  if(!c.seen)c.seen=today();
+  c.reps=x.reps;c.int=x.int;c.ease=x.ease;c.due=add(today(),x.int);
+  if(g===0)R.q.push(c.id);
+  R.show=false;if(!R.q.length)R.on=false;save();rRev();
+}
+function tab(v){
+  ["today","rev","cards","src","week"].forEach(function(x){$("v-"+x).hidden=x!==v});
+  document.querySelectorAll(".tabs button").forEach(function(b){b.classList.toggle("on",b.dataset.t===v)});
+  if(v==="today")rToday();if(v==="rev")rRev();if(v==="cards")rCards();if(v==="src")rSrc();if(v==="week")rWeek();window.scrollTo(0,0);
+}
+function head(){
+  $("lang").innerHTML=Object.keys(S.langs).map(function(k){return'<option value="'+k+'"'+(k===S.cur?" selected":"")+'>'+LN[k]+'</option>'}).join("");
+  $("ls").innerHTML=LANGS.filter(function(l){return !S.langs[l[0]]}).map(function(l){return'<option value="'+l[0]+'">'+l[1]+'</option>'}).join("");
+}
+document.addEventListener("click",function(e){
+  var t=e.target,b;
+  if(b=t.closest("[data-t]")){tab(b.dataset.t);return}
+  if(t.closest("[data-go]")){tab("rev");return}
+  if(b=t.closest("[data-m]")){var d=today();S.log[d]=S.log[d]||{};S.log[d][S.cur]=Math.max(0,mins(d)+ +b.dataset.m);save();rToday();return}
+  if(t.closest("[data-start]")){start();return}
+  if(t.closest("[data-show]")){R.show=true;rRev();return}
+  if(t.closest("[data-say]")){var c=byId(R.q[0]);speak(c.w+(R.show&&c.s?". "+c.s:""));return}
+  if(b=t.closest("[data-g]")){grade(+b.dataset.g);return}
+  if(b=t.closest("[data-del]")){var id=b.dataset.del;if(DEL===id){S.cards=S.cards.filter(function(c){return c.id!==id});DEL=null;save()}else DEL=id;rCards();return}
+  if(b=t.closest("[data-sdel]")){var sid=b.dataset.sdel;if(DEL===sid){S.src=S.src.filter(function(c){return c.id!==sid});DEL=null;save()}else DEL=sid;rSrc();return}
+  if(b=t.closest("[data-sf]")){SF=b.dataset.sf;rSrc();return}
+  if(t.closest("#al")){$("lf").hidden=!$("lf").hidden;return}
+  if(t.closest("#ex")){$("io").value=mine().map(function(c){return[c.w,c.s,c.t,c.r].map(function(x){return String(x||"").replace(/[;\n]/g,",")}).join(";")}).join("\n");$("io").select();return}
+  if(t.closest("#im")){
+    $("io").value.split("\n").forEach(function(l,i){var p=l.split(";");if(p[0]&&p[2])S.cards.push({id:Date.now()+"-"+i,lang:S.cur,w:p[0].trim(),s:(p[1]||"").trim(),t:p[2].trim(),r:(p[3]||"").trim(),ease:2.5,int:0,reps:0,due:today(),seen:""})});
+    save();rCards();
+  }
+});
+document.addEventListener("change",function(e){
+  var el=e.target;
+  if(el.id==="lang"){S.cur=el.value;R={on:false,q:[],show:false};save();tab(document.querySelector(".tabs .on").dataset.t)}
+  else if(el.dataset&&el.dataset.ss){S.src.find(function(s){return s.id===el.dataset.ss}).status=el.value;save()}
+});
+document.addEventListener("submit",function(e){
+  e.preventDefault();
+  var id=e.target.id;
+  if(id==="lf"){var c=$("ls").value;if(c){S.langs[c]=1;S.cur=c;save();head();$("lf").hidden=true;tab("today")}}
+  if(id==="cf"){S.cards.push({id:String(Date.now()),lang:S.cur,w:$("cw").value.trim(),s:$("cs").value.trim(),t:$("ct").value.trim(),r:$("cr").value.trim(),ease:2.5,int:0,reps:0,due:today(),seen:""});save();rCards()}
+  if(id==="sf"){
+    var u=$("su").value.trim(),sk=[].slice.call(document.querySelectorAll("[name=sk]:checked")).map(function(x){return x.value});
+    if(u&&!/^https?:\/\//i.test(u))u="https://"+u;
+    S.src.push({id:"s"+Date.now(),lang:S.cur,name:$("sn").value.trim(),url:u||"#",skills:sk.length?sk:["reading"],note:$("so").value.trim(),status:"to try"});save();rSrc();
+  }
+});
+function setSync(t){var e=$("sync");if(e)e.textContent=t}
+function push(){
+  if(!sb||!user)return;
+  clearTimeout(timer);setSync("Saving…");
+  timer=setTimeout(function(){
+    sb.from("app_data").upsert({user_id:user.id,app:"idiomas",value:S,updated_at:new Date().toISOString()},{onConflict:"user_id,app"}).then(function(r){setSync(r.error?"Offline · saved on this device":"Synced")});
+  },600);
+}
+function redraw(){head();tab(document.querySelector(".tabs .on").dataset.t)}
+function pull(){
+  sb.from("app_data").select("value").eq("app","idiomas").maybeSingle().then(function(r){
+    if(r.error){setSync("Offline · saved on this device");return}
+    var rv=r.data&&r.data.value;
+    if(rv&&(rv._u||0)>(S._u||0)){S=rv;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}R={on:false,q:[],show:false};setSync("Synced");redraw()}
+    else{S._u=S._u||Date.now();push()}
+  });
+}
+function enter(){$("auth").hidden=true;$("app").hidden=false;load();head();tab("today");setSync("Syncing…");pull()}
+$("af").addEventListener("submit",function(e){e.preventDefault();$("am").textContent="Signing in…";
+  sb.auth.signInWithPassword({email:$("ae").value.trim(),password:$("ap").value}).then(function(r){if(r.error)$("am").textContent=r.error.message;else{user=r.data.user;$("am").textContent="";enter()}})});
+$("ac").addEventListener("click",function(){var em=$("ae").value.trim(),pw=$("ap").value;
+  if(!em||pw.length<6){$("am").textContent="Enter your email and a password with at least 6 characters.";return}
+  $("am").textContent="Creating account…";
+  sb.auth.signUp({email:em,password:pw}).then(function(r){if(r.error)$("am").textContent=r.error.message;else if(r.data.session){user=r.data.user;$("am").textContent="";enter()}else $("am").textContent="Check your email to confirm your account, then sign in."})});
+$("so").addEventListener("click",function(){sb.auth.signOut().then(function(){user=null;$("app").hidden=true;$("auth").hidden=false})});
+document.addEventListener("visibilitychange",function(){if(!document.hidden&&sb&&user)pull()});
+if(window.supabase){
+  sb=supabase.createClient(SB_URL,SB_KEY);
+  sb.auth.getSession().then(function(r){var ss=r.data&&r.data.session;if(ss){user=ss.user;enter()}else{$("app").hidden=true;$("auth").hidden=false}});
+}else{load();head();tab("today");setSync("Offline · saved on this device")}
+})();
+</script>
+</body>
+</html>
