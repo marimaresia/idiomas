@@ -45,9 +45,8 @@ a{color:var(--ink)}
 </head>
 <body>
 <main>
-<section id="auth" hidden><h1>Languages</h1><div class="box"><p class="mute">Sign in to sync your cards and minutes across all your devices.</p><form id="af"><input type="email" id="ae" placeholder="Email" autocomplete="email" required aria-label="Email"><input type="password" id="ap" placeholder="Password (min. 6 characters)" autocomplete="current-password" required aria-label="Password"><div class="row" style="margin-top:8px"><button class="btn" type="submit">Sign in</button><button class="ghost" type="button" id="ac">Create account</button></div></form><p id="am" class="mute" role="status"></p></div></section>
 <div id="app">
-<div class="row"><h1>Languages</h1><span><select id="lang" aria-label="Language"></select> <button class="ghost" id="al" type="button" aria-label="Add language">+</button> <button class="ghost" id="so" type="button">Sign out</button></span></div>
+<div class="row"><h1>Languages</h1><span><select id="lang" aria-label="Language"></select> <button class="ghost" id="al" type="button" aria-label="Add language">+</button></span></div>
 <p class="mute" id="sync"></p>
 <form id="lf" class="box" hidden><label class="mute" for="ls">New language</label><select id="ls"></select> <button class="btn" type="submit">Add</button></form>
 <section id="v-today"></section>
@@ -213,36 +212,27 @@ document.addEventListener("submit",function(e){
     S.src.push({id:"s"+Date.now(),lang:S.cur,name:$("sn").value.trim(),url:u||"#",skills:sk.length?sk:["reading"],note:$("so").value.trim(),status:"to try"});save();rSrc();
   }
 });
+var SYNC="mf9d6b2ffad88697b6002-idiomas";
 function setSync(t){var e=$("sync");if(e)e.textContent=t}
 function push(){
-  if(!sb||!user)return;
+  if(!sb)return;
   clearTimeout(timer);setSync("Saving…");
   timer=setTimeout(function(){
-    sb.from("app_data").upsert({user_id:user.id,app:"idiomas",value:S,updated_at:new Date().toISOString()},{onConflict:"user_id,app"}).then(function(r){setSync(r.error?"Offline · saved on this device":"Synced")});
+    sb.from("app_sync").upsert({id:SYNC,value:S,updated_at:new Date().toISOString()}).then(function(r){setSync(r.error?"Offline · saved on this device":"Synced")});
   },600);
 }
 function redraw(){head();tab(document.querySelector(".tabs .on").dataset.t)}
 function pull(){
-  sb.from("app_data").select("value").eq("app","idiomas").maybeSingle().then(function(r){
+  sb.from("app_sync").select("value").eq("id",SYNC).maybeSingle().then(function(r){
     if(r.error){setSync("Offline · saved on this device");return}
     var rv=r.data&&r.data.value;
     if(rv&&(rv._u||0)>(S._u||0)){S=rv;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}R={on:false,q:[],show:false};setSync("Synced");redraw()}
     else{S._u=S._u||Date.now();push()}
   });
 }
-function enter(){$("auth").hidden=true;$("app").hidden=false;load();head();tab("today");setSync("Syncing…");pull()}
-$("af").addEventListener("submit",function(e){e.preventDefault();$("am").textContent="Signing in…";
-  sb.auth.signInWithPassword({email:$("ae").value.trim(),password:$("ap").value}).then(function(r){if(r.error)$("am").textContent=r.error.message;else{user=r.data.user;$("am").textContent="";enter()}})});
-$("ac").addEventListener("click",function(){var em=$("ae").value.trim(),pw=$("ap").value;
-  if(!em||pw.length<6){$("am").textContent="Enter your email and a password with at least 6 characters.";return}
-  $("am").textContent="Creating account…";
-  sb.auth.signUp({email:em,password:pw}).then(function(r){if(r.error)$("am").textContent=r.error.message;else if(r.data.session){user=r.data.user;$("am").textContent="";enter()}else $("am").textContent="Check your email to confirm your account, then sign in."})});
-$("so").addEventListener("click",function(){sb.auth.signOut().then(function(){user=null;$("app").hidden=true;$("auth").hidden=false})});
-document.addEventListener("visibilitychange",function(){if(!document.hidden&&sb&&user)pull()});
-if(window.supabase){
-  sb=supabase.createClient(SB_URL,SB_KEY);
-  sb.auth.getSession().then(function(r){var ss=r.data&&r.data.session;if(ss){user=ss.user;enter()}else{$("app").hidden=true;$("auth").hidden=false}});
-}else{load();head();tab("today");setSync("Offline · saved on this device")}
+document.addEventListener("visibilitychange",function(){if(!document.hidden&&sb)pull()});
+load();head();tab("today");
+if(window.supabase){sb=supabase.createClient(SB_URL,SB_KEY);setSync("Syncing…");pull()}else setSync("Offline · saved on this device");
 })();
 </script>
 </body>
