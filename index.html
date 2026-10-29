@@ -13,7 +13,7 @@
 *{box-sizing:border-box}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:"Patrick Hand","Comic Sans MS",system-ui,sans-serif;font-size:1.15rem;line-height:1.4;background-image:repeating-linear-gradient(transparent 0 29px,rgba(128,128,150,.15) 29px 30px)}
-main{max-width:640px;margin:0 auto;padding:18px 16px 110px}
+main{max-width:1000px;margin:0 auto;padding:18px 16px 110px}
 [hidden]{display:none!important}
 h1,h2,.big{font-family:Caveat,cursive;font-weight:700;margin:0}
 h1{font-size:3rem;line-height:1}h2{font-size:1.8rem}.big{font-size:2.6rem;word-break:break-word}
@@ -38,9 +38,21 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
 .chip{font:inherit;font-size:1rem;color:var(--ink);background:var(--card);border:2px solid var(--ink);border-radius:12px 16px 12px 16px/16px 12px 16px 12px;padding:5px 12px;cursor:pointer}
 .chip.on{background:var(--but)}
+.tag{font-size:.85rem;border:1px solid var(--ink);border-radius:8px;padding:0 6px;margin-right:4px;background:var(--but)}
 .ck{display:inline-flex;gap:4px;align-items:center;margin-right:10px;font-size:1rem}
 ol{margin:6px 0;padding-left:22px}
 a{color:var(--ink)}
+#v-rev,#v-cards,#v-src{max-width:680px;margin:0 auto}
+#v-today{display:grid;grid-template-columns:1fr;gap:0 12px}
+@media(min-width:760px){#v-today{grid-template-columns:1fr 1fr}.wide{grid-column:1/-1}}
+.days{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:0 12px}
+.blk{display:block;text-align:left;width:100%;font:inherit;color:var(--ink);cursor:pointer}
+.blk span{display:block}.blk .bar{display:block}
+.big2{font-family:Caveat,cursive;font-size:1.7rem;line-height:1.1}
+#sheet{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center}
+#sheet .in{background:var(--bg);width:100%;max-width:640px;max-height:92vh;overflow:auto;border:2px solid var(--ink);border-radius:18px 18px 0 0;padding:14px 14px calc(14px + env(safe-area-inset-bottom,0px))}
+@media(min-width:760px){#sheet{align-items:center}#sheet .in{border-radius:18px}}
+input[type=number]{font:inherit;color:var(--ink);background:var(--card);border:2px solid var(--ink);border-radius:10px;padding:6px 8px}
 </style>
 </head>
 <body>
@@ -56,12 +68,13 @@ a{color:var(--ink)}
 <section id="v-week" hidden></section>
 </div>
 </main>
+<div id="sheet" hidden></div>
 <nav class="tabs"><button data-t="today" class="on">Today</button><button data-t="rev">Review</button><button data-t="cards">Cards</button><button data-t="src">Sources</button><button data-t="week">Week</button></nav>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>
 (function(){
 var SB_URL="https://vkmbbkfknrhmualrqnpg.supabase.co",SB_KEY="sb_publishable_hxXOEN3ctL0qaltOg-yaXg_-kIzF2Sc",sb=null,user=null,timer=null;
-var KEY="idiomas:v1",GOAL=45,NEWMAX=8,S,R={on:false,q:[],show:false},DEL=null,SF="all";
+var KEY="idiomas:v1",GOAL=45,NEWMAX=8,S,R={on:false,q:[],show:false,h:[]},DEL=null,SF="all",CQ="",CT="",CS="all",CL=40,ED=null;
 var LANGS=[["en-US","English"],["es-ES","Spanish"],["fr-FR","French"],["ko-KR","Korean"],["de-DE","German"],["it-IT","Italian"],["ja-JP","Japanese"]],LN={};
 LANGS.forEach(function(l){LN[l[0]]=l[1]});
 var SK=["listening","reading","speaking","writing","vocabulary","test"];
@@ -73,8 +86,10 @@ var PL=[
 ["Writing",["writing"],["Write 10 to 15 lines about your week","Use at least 5 words from this week’s cards","Read it aloud and fix what sounds off"]],
 ["Speaking + games",["speaking","vocabulary"],["Redo Wednesday’s topic using the new words","Then play a vocabulary game for 10 min"]],
 ["Light reading",["reading"],["Read for pleasure, no dictionary","Only save words that block your understanding"]]];
+var LX={"ko-KR":"Hand-write 10 words in Hangul","ja-JP":"Hand-write 10 words in kana or kanji"};
 var DN=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
-var SEED=[
+var SEEDS={
+"en-US":[
 ["British Council LearnEnglish","https://learnenglish.britishcouncil.org/",["listening","reading","writing","speaking"],"Free and official, A1 to C1. Pick your level."],
 ["ESL Conversation Questions","https://www.eslconversationquestions.com/",["speaking"],"Question lists by topic. Answer aloud and record."],
 ["LingoStories","https://lingostories.org/en/",["reading"],"Interactive stories where your choices shape the plot."],
@@ -83,17 +98,60 @@ var SEED=[
 ["Project Gutenberg","https://www.gutenberg.org/",["reading"],"Free public-domain books. The English is older."],
 ["EF SET","https://www.efset.org/",["test"],"Free CEFR level test, 50 or 90 min. Speaking and writing are AI-graded."],
 ["Cambridge Test Your English","https://www.cambridgeenglish.org/test-your-english/",["test"],"Quick, free estimate of your level."],
-["Vocabu","https://vocabu.com.br",["vocabulary"],"Wordle-style word game. Not independently verified."]];
+["Vocabu","https://vocabu.com.br",["vocabulary"],"Wordle-style word game. Not independently verified."]],
+"es-ES":[
+["Dreaming Spanish","https://www.dreamingspanish.com/",["listening"],"Comprehensible-input videos by level."],
+["Language Transfer","https://www.languagetransfer.org/",["listening","speaking"],"Free audio course, Complete Spanish."],
+["SpanishDict","https://www.spanishdict.com/",["vocabulary","writing"],"Dictionary, conjugations and examples."],
+["Notes in Spanish","https://www.notesinspanish.com/",["listening","reading"],"Podcasts and lessons by level."],
+["Project Gutenberg (Spanish)","https://www.gutenberg.org/browse/languages/es",["reading"],"Free public-domain books in Spanish."],
+["SIELE","https://siele.org/",["test"],"Official Instituto Cervantes certification."]],
+"fr-FR":[
+["Français facile (RFI)","https://francaisfacile.rfi.fr/",["listening","reading"],"News and audio at a slow pace."],
+["TV5MONDE Apprendre","https://apprendre.tv5monde.com/",["listening","reading","vocabulary"],"Videos with exercises, A1 to C1."],
+["Kwiziq French","https://french.kwiziq.com/",["writing","vocabulary"],"Grammar practice with level tracking."],
+["Project Gutenberg (French)","https://www.gutenberg.org/browse/languages/fr",["reading"],"Free public-domain books in French."],
+["WordReference","https://www.wordreference.com/fren/",["vocabulary"],"Dictionary with forum examples."]],
+"ko-KR":[
+["Talk To Me In Korean","https://talktomeinkorean.com/",["listening","speaking","vocabulary"],"Free lessons and audio, beginner to advanced."],
+["How to Study Korean","https://www.howtostudykorean.com/",["reading","writing"],"Structured grammar course."],
+["Naver Dictionary","https://en.dict.naver.com/",["vocabulary"],"Best dictionary for Korean, with examples."],
+["Naver Webtoon","https://www.webtoons.com/",["reading"],"Comics for casual reading."],
+["TOPIK","https://www.topik.go.kr/",["test"],"Official Korean proficiency test."]],
+"de-DE":[
+["DW Learn German","https://learngerman.dw.com/",["listening","reading","vocabulary"],"Free courses from A1 to C1, including Nicos Weg."],
+["Easy German","https://www.easygerman.org/",["listening","speaking"],"Street interviews with subtitles."],
+["Goethe-Institut","https://www.goethe.de/",["test","reading"],"Official exams and free practice material."],
+["Project Gutenberg (German)","https://www.gutenberg.org/browse/languages/de",["reading"],"Free public-domain books in German."],
+["DWDS","https://www.dwds.de/",["vocabulary","writing"],"Dictionary with real usage examples."]],
+"it-IT":[
+["RaiPlay Sound","https://www.raiplaysound.it/",["listening"],"Italian radio and podcasts."],
+["Coffee Break Italian","https://coffeebreaklanguages.com/",["listening","speaking"],"Podcast lessons by level."],
+["LiberLiber","https://www.liberliber.it/",["reading"],"Free Italian books."],
+["Treccani Vocabolario","https://www.treccani.it/vocabolario/",["vocabulary","writing"],"Reference dictionary."],
+["Project Gutenberg (Italian)","https://www.gutenberg.org/browse/languages/it",["reading"],"Free public-domain books in Italian."]],
+"ja-JP":[
+["NHK WORLD Easy Japanese","https://www3.nhk.or.jp/nhkworld/en/learnjapanese/",["listening","speaking"],"Short lessons with audio."],
+["NHK News Web Easy","https://www3.nhk.or.jp/news/easy/",["reading","listening"],"News in simple Japanese, with furigana."],
+["Jisho","https://jisho.org/",["vocabulary","writing"],"Dictionary with kanji and examples."],
+["Satori Reader","https://www.satorireader.com/",["reading"],"Graded stories with notes. Partly paid."],
+["JLPT","https://www.jlpt.jp/e/",["test"],"Official proficiency test, N5 to N1."]]};
 function $(i){return document.getElementById(i)}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
 function cap(s){return s.charAt(0).toUpperCase()+s.slice(1)}
 function fd(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
 function today(){return fd(new Date())}
 function add(iso,n){var d=new Date(iso+"T12:00");d.setDate(d.getDate()+n);return fd(d)}
+function tg(s){var o=[];String(s||"").split(/[,|]/).forEach(function(x){x=x.trim().toLowerCase();if(x&&o.indexOf(x)<0)o.push(x)});return o}
+function seedSrc(l){return(SEEDS[l]||[]).map(function(x,i){return{id:"s"+l+i,lang:l,name:x[0],url:x[1],skills:x[2],note:x[3],status:"to try"}})}
+function norm(){
+  if(!S.plans)S.plans={};if(!S.blog)S.blog={};if(!S.src)S.src=[];if(!S.seeded)S.seeded={};
+  Object.keys(S.langs).forEach(function(l){if(S.seeded[l])return;S.seeded[l]=1;if(!S.src.some(function(s){return s.lang===l}))S.src=S.src.concat(seedSrc(l))});
+}
 function load(){
   try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){S=null}
   if(!S||!S.langs)S={cur:"en-US",langs:{"en-US":1},cards:[],log:{}};
-  if(!S.src)S.src=SEED.map(function(x,i){return{id:"s"+i,lang:"en-US",name:x[0],url:x[1],skills:x[2],note:x[3],status:"to try"}});
+  norm();
 }
 function save(){S._u=Date.now();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}push()}
 function mine(){return S.cards.filter(function(c){return c.lang===S.cur})}
@@ -114,29 +172,84 @@ function speak(t){try{var u=new SpeechSynthesisUtterance(t);u.lang=S.cur;u.rate=
 function srcFor(sk){return S.src.filter(function(s){return s.lang===S.cur&&s.status!=="done"&&s.skills.some(function(k){return sk.indexOf(k)>-1})})}
 function link(s){return'<a href="'+esc(s.url)+'" target="_blank" rel="noopener"><b>'+esc(s.name)+'</b></a>'}
 
+var OB=null,TM=0,TT=null;
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+function bkey(d){return S.cur+"|"+d}
+function seedPlan(){var P={};[0,1,2,3,4,5,6].forEach(function(d){var p=PL[d],wk=d>0&&d<6,st=p[2];if(d===4&&LX[S.cur])st=st.concat(LX[S.cur]);
+  P[d]=wk?[{id:"v"+d,name:"Vocabulary",min:15,skills:["vocabulary"],steps:["Review your due cards","Add 5 to 8 new words from today’s block"]},{id:"b"+d,name:p[0],min:30,skills:p[1],steps:st}]:[{id:"b"+d,name:p[0],min:45,skills:p[1],steps:st}]});return P}
+function plan(d){var P=S.plans[S.cur]||(S.plans[S.cur]=seedPlan());return d==null?P:P[d]}
+function blg(d,id){var k=bkey(d),a=S.blog[k]||(S.blog[k]={});return a[id]||(a[id]={min:0,done:false,ck:[],extra:[],note:""})}
+function bget(d,id){var a=S.blog[bkey(d)];return(a&&a[id])||{min:0,done:false,ck:[],extra:[],note:""}}
+function addMin(d,id,n){var b=blg(d,id),nb=Math.max(0,b.min+n),dl=nb-b.min;b.min=nb;S.log[d]=S.log[d]||{};S.log[d][S.cur]=Math.max(0,mins(d)+dl)}
+function curBlock(){return OB?plan(new Date(OB.d+"T12:00").getDay()).find(function(b){return b.id===OB.id}):null}
+function tick(){var e=$("tml");if(e&&TT){var x=Math.floor((Date.now()-TM)/1000);e.textContent="Running · "+Math.floor(x/60)+":"+String(x%60).padStart(2,"0")}}
+function stopTimer(){if(TT){clearInterval(TT);TT=null;var mn=Math.round((Date.now()-TM)/60000);TM=0;if(mn>0&&OB){addMin(OB.d,OB.id,mn);save()}}}
+function refresh(){var v=document.querySelector(".tabs .on").dataset.t;if(v==="today")rToday();if(v==="week")rWeek();if(OB)rSheet()}
+function closeSheet(){stopTimer();OB=null;$("sheet").hidden=true;refresh()}
 function rToday(){
-  var t=today(),m=mins(t),k=counts(),dw=new Date().getDay(),p=PL[dw],st=streak(),h;
-  h='<div class="box s"><h2>'+DN[dw]+' · '+LN[S.cur]+'</h2><p class="mute">Goal: '+GOAL+' min a day · streak: '+st+(st===1?' day':' days')+'</p>'+
+  var t=today(),m=mins(t),k=counts(),dn=new Date().getDay(),st=streak(),bs=plan(dn),pl=bs.reduce(function(a,b){return a+b.min},0);
+  var h='<div class="box s wide"><h2>'+DN[dn]+' · '+LN[S.cur]+'</h2><p class="mute">Goal: '+GOAL+' min a day · streak: '+st+(st===1?' day':' days')+' · planned today: '+pl+' min</p>'+
   '<div class="bar" role="img" aria-label="'+m+' of '+GOAL+' minutes"><i style="width:'+Math.min(100,m/GOAL*100)+'%"></i></div>'+
-  '<div class="row"><b>'+m+' / '+GOAL+' min</b><span><button class="ghost" data-m="-10">−10</button> <button class="ghost" data-m="10">+10</button> <button class="btn" data-m="15">+15</button> <button class="btn" data-m="30">+30</button></span></div></div>'+
-  '<div class="box y"><h2>Vocabulary · 15 min</h2><p>'+k.d+' to review · '+k.n+' new today</p><button class="btn" data-go="rev">Start review</button></div>'+
-  '<div class="box p"><h2>Today’s block · '+p[0]+'</h2><ol>'+p[2].map(function(x){return'<li>'+x+'</li>'}).join("")+'</ol>';
-  var f=srcFor(p[1]).slice(0,4);
-  h+=f.length?'<p class="mute">Sources for this block</p>'+f.map(function(s){return'<div class="item">'+link(s)+'<span class="mute">'+esc(s.note)+'</span></div>'}).join(""):'<p class="mute">No sources for this block yet. Add some in Sources.</p>';
-  $("v-today").innerHTML=h+'</div>';
+  '<div class="row"><b>'+m+' / '+GOAL+' min</b><span><button class="ghost" data-m="-10">−10</button> <button class="ghost" data-m="10">+10</button> <button class="btn" data-m="15">+15</button> <button class="btn" data-m="30">+30</button></span></div></div>';
+  bs.forEach(function(b,i){var bb=bget(t,b.id);
+    h+='<button type="button" class="box blk '+["y","p","s"][i%3]+'" data-ob="'+b.id+'"><span class="big2">'+esc(b.name)+(bb.done?' ✓':'')+'</span><span class="mute">'+bb.min+' / '+b.min+' min'+(b.skills.indexOf("vocabulary")>-1?' · '+k.d+' to review · '+k.n+' new':'')+'</span><span class="bar"><i style="width:'+Math.min(100,b.min?bb.min/b.min*100:0)+'%"></i></span></button>'});
+  h+='<p class="mute wide">'+(bs.length?'Tap a block to open it: what to study, timer, checklist and notes.':'No blocks planned for today. Add some in Week.')+'</p>';
+  $("v-today").innerHTML=h;
+}
+function rSheet(){
+  var b=curBlock(),sh=$("sheet");if(!b){sh.hidden=true;return}
+  var bb=bget(OB.d,b.id),k=counts(),h='';
+  h+='<div class="row"><h2>'+esc(b.name)+'</h2><button class="ghost" data-sx="1" aria-label="Close">✕</button></div>';
+  h+='<div class="box"><div class="bar"><i style="width:'+Math.min(100,b.min?bb.min/b.min*100:0)+'%"></i></div><div class="row"><b>'+bb.min+' / '+b.min+' min</b><label class="ck">Planned <input type="number" min="0" max="240" value="'+b.min+'" data-bpm="1" style="width:76px" aria-label="Planned minutes"> min</label></div>'+
+    '<div class="row" style="margin:8px 0"><span><button class="ghost" data-bm="-5">−5</button> <button class="ghost" data-bm="5">+5</button> <button class="btn" data-bm="10">+10</button> <button class="btn" data-bm="15">+15</button></span><button class="btn" data-tm="1">'+(TT?'Stop timer':'Start timer')+'</button></div><p class="mute" id="tml"></p>'+
+    '<label class="l"><input type="checkbox" data-bdone="1"'+(bb.done?' checked':'')+'> Block done</label></div>';
+  if(b.skills.indexOf("vocabulary")>-1)h+='<div class="box y"><b>'+k.d+' to review · '+k.n+' new</b><br><button class="btn" data-go="rev">Start review</button></div>';
+  if((b.steps||[]).length)h+='<div class="box"><b>Steps</b>'+b.steps.map(function(x,i){return'<div class="item"><label class="l"><input type="checkbox" data-bck="'+i+'"'+(bb.ck.indexOf(i)>-1?' checked':'')+'>'+esc(x)+'</label></div>'}).join("")+'</div>';
+  var f=srcFor(b.skills);
+  h+='<div class="box p"><b>What to study</b>'+(f.length?f.slice(0,5).map(function(s){return'<div class="item">'+link(s)+'<span class="mute">'+esc(s.note)+'</span></div>'}).join(""):'<p class="mute">No sources for this block yet. Add some in Sources.</p>')+'</div>';
+  h+='<div class="box"><b>My list for today</b>'+bb.extra.map(function(x,i){return'<div class="item"><label class="l"><input type="checkbox" data-bx="'+i+'"'+(x.done?' checked':'')+'>'+esc(x.t)+'</label><button class="ghost" data-dx="'+i+'" aria-label="Remove">×</button></div>'}).join("")+'<form data-f="bextra" class="row" style="flex-wrap:nowrap"><input type="text" name="tx" placeholder="Add what you will study" aria-label="Item"><button class="btn" type="submit">+</button></form></div>';
+  h+='<div class="box"><b>Notes</b><textarea rows="3" data-bnote="1" placeholder="What did you study?" aria-label="Notes">'+esc(bb.note||"")+'</textarea></div>';
+  sh.innerHTML='<div class="in" role="dialog" aria-modal="true" aria-label="'+esc(b.name)+'">'+h+'</div>';sh.hidden=false;tick();
 }
 function rWeek(){
-  var dow=(new Date().getDay()+6)%7,mon=add(today(),-dow),h='<div class="box">';
-  for(var i=0;i<7;i++){var d=add(mon,i),x=PL[(i+1)%7],mm=mins(d);
-    h+='<div class="item"><span><b>'+DN[(i+1)%7]+'</b> · '+x[0]+(d===today()?' ← today':'')+'</span><span>'+mm+' min'+(mm>=GOAL?' ✓':'')+'</span></div>';}
-  $("v-week").innerHTML='<h2>This week</h2><p class="mute">Every day: 15 min of vocabulary + the day’s block.</p>'+h+'</div>';
+  var P=plan(),dow=(new Date().getDay()+6)%7,mon=add(today(),-dow);
+  var h='<h2>Weekly plan · '+LN[S.cur]+'</h2><p class="mute">Set the minutes of each block, rename it or add new ones. Open a block on Today to study it.</p><div class="days">';
+  ORDW.forEach(function(w){var bs=P[w],tot=bs.reduce(function(a,b){return a+b.min},0);
+    h+='<div class="box"><b>'+DN[w]+'</b> <span class="mute">'+tot+' min</span>'+bs.map(function(b,i){var key=w+"|"+i;
+      return'<div class="item"><input type="text" value="'+esc(b.name)+'" data-pn="'+key+'" aria-label="Block name" style="flex:1;min-width:0"><span><input type="number" min="0" max="240" value="'+b.min+'" data-pm="'+key+'" style="width:70px" aria-label="Minutes"> <button class="ghost" data-pd="'+key+'">'+(DEL===key?'Confirm':'×')+'</button></span></div>'}).join("")+
+      '<form data-f="addblk" data-w="'+w+'" class="row" style="flex-wrap:nowrap"><input type="text" name="nm" placeholder="New block" required aria-label="Block name"><input type="number" name="mn" min="1" max="240" value="15" style="width:70px" aria-label="Minutes"><select name="sk" aria-label="Skill"><option value="">No skill</option>'+SK.map(function(x){return'<option>'+x+'</option>'}).join("")+'</select><button class="ghost" type="submit">+</button></form></div>'});
+  h+='</div><div class="box"><b>Logged this week</b>';
+  for(var i=0;i<7;i++){var d=add(mon,i),mm=mins(d);h+='<div class="item"><span><b>'+DN[(i+1)%7]+'</b>'+(d===today()?' ← today':'')+'</span><span>'+mm+' min'+(mm>=GOAL?' ✓':'')+'</span></div>'}
+  $("v-week").innerHTML=h+'</div>';
 }
+var ORDW=[1,2,3,4,5,6,0];
+function tags(){var o={};mine().forEach(function(c){(c.g||[]).forEach(function(t){o[t]=1})});return Object.keys(o).sort()}
 function rCards(){
-  var m=mine().slice().reverse(),h='<div class="box"><form id="cf" autocomplete="off"><input type="text" id="cw" placeholder="Word" required aria-label="Word"><input type="text" id="cs" placeholder="Example sentence" aria-label="Sentence"><input type="text" id="ct" placeholder="Translation" required aria-label="Translation"><input type="text" id="cr" placeholder="Source (optional)" aria-label="Source"><button class="btn" type="submit">Add card</button></form></div>';
-  h+='<div class="box"><b>'+m.length+' cards in '+LN[S.cur]+'</b>';
-  m.slice(0,40).forEach(function(c){h+='<div class="item"><span><b>'+esc(c.w)+'</b> · '+esc(c.t)+'<br><span class="mute">'+(c.seen?(c.due<=today()?'due today':'due '+c.due):'new')+'</span></span><button class="ghost" data-del="'+c.id+'">'+(DEL===c.id?'Confirm':'Remove')+'</button></div>'});
-  h+='</div><div class="box"><b>Backup</b><p class="mute">Your data lives only in this browser. Export now and then and keep the text somewhere safe.</p><textarea id="io" rows="4" aria-label="CSV"></textarea><div class="row"><button class="ghost" id="ex" type="button">Export</button><button class="ghost" id="im" type="button">Import</button></div></div>';
-  $("v-cards").innerHTML=h;
+  var tl=tags();if(CT&&tl.indexOf(CT)<0)CT="";
+  var h='<div class="box"><form id="cf" autocomplete="off"><input type="text" id="cw" placeholder="Word" required aria-label="Word"><input type="text" id="cs" placeholder="Example sentence" aria-label="Sentence"><input type="text" id="ct" placeholder="Translation" required aria-label="Translation"><input type="text" id="cr" placeholder="Source (optional)" aria-label="Source"><input type="text" id="cg" placeholder="Tags, comma separated (optional)" aria-label="Tags"><button class="btn" type="submit">Add card</button></form></div>';
+  h+='<div class="box"><input type="text" id="cq" placeholder="Search cards" value="'+esc(CQ)+'" aria-label="Search cards"><select id="cstat" aria-label="Filter by status">'+[["all","All cards"],["new","New"],["due","Due"]].map(function(o){return'<option value="'+o[0]+'"'+(o[0]===CS?' selected':'')+'>'+o[1]+'</option>'}).join("")+'</select>';
+  if(tl.length)h+='<div class="chips">'+[""].concat(tl).map(function(t){return'<button type="button" class="chip'+(t===CT?' on':'')+'" data-ct="'+esc(t)+'">'+(t?esc(t):'All tags')+'</button>'}).join("")+'</div>';
+  h+='</div><div class="box" id="cl"></div>';
+  h+='<div class="box"><b>Backup</b><p class="mute">Your data lives only in this browser. Export now and then and keep the text somewhere safe. Format: word;sentence;translation;source;tag|tag</p><textarea id="io" rows="4" aria-label="CSV"></textarea><div class="row"><button class="ghost" id="ex" type="button">Export</button><button class="ghost" id="im" type="button">Import</button></div></div>';
+  $("v-cards").innerHTML=h;rCardList();
+}
+function editForm(c){
+  return'<form data-f="cedit" data-id="'+c.id+'" style="width:100%"><input type="text" name="w" value="'+esc(c.w)+'" required aria-label="Word"><input type="text" name="s" value="'+esc(c.s||"")+'" placeholder="Example sentence" aria-label="Sentence"><input type="text" name="t" value="'+esc(c.t)+'" required aria-label="Translation"><input type="text" name="r" value="'+esc(c.r||"")+'" placeholder="Source" aria-label="Source"><input type="text" name="g" value="'+esc((c.g||[]).join(", "))+'" placeholder="Tags, comma separated" aria-label="Tags"><div class="row"><button class="btn" type="submit">Save</button><button class="ghost" type="button" data-ce="1">Cancel</button></div></form>';
+}
+function rCardList(){
+  var el=$("cl");if(!el)return;
+  var t=today(),q=CQ.toLowerCase(),all=mine().slice().reverse(),m=all.filter(function(c){
+    if(CT&&(c.g||[]).indexOf(CT)<0)return false;
+    if(CS==="new"&&c.seen)return false;
+    if(CS==="due"&&!(c.seen&&c.due<=t))return false;
+    return !q||[c.w,c.s,c.t,c.r].concat(c.g||[]).join(" ").toLowerCase().indexOf(q)>-1});
+  var h='<b>'+(m.length===all.length?m.length:m.length+' of '+all.length)+' cards in '+LN[S.cur]+'</b>';
+  m.slice(0,CL).forEach(function(c){
+    if(ED===c.id){h+='<div class="item">'+editForm(c)+'</div>';return}
+    h+='<div class="item"><span><b>'+esc(c.w)+'</b> · '+esc(c.t)+(c.s?'<br><span class="mute">'+esc(c.s)+'</span>':'')+'<br>'+(c.g||[]).map(function(x){return'<span class="tag">'+esc(x)+'</span>'}).join("")+'<span class="mute">'+(c.seen?(c.due<=t?'due today':'due '+c.due):'new')+'</span></span><span><button class="ghost" data-ed="'+c.id+'">Edit</button> <button class="ghost" data-del="'+c.id+'">'+(DEL===c.id?'Confirm':'Remove')+'</button></span></div>'});
+  if(!m.length)h+='<p class="mute">No cards match.</p>';
+  if(m.length>CL)h+='<div class="row"><button class="ghost" data-more="1">Show more ('+(m.length-CL)+' left)</button></div>';
+  el.innerHTML=h;
 }
 function rSrc(){
   var m=S.src.filter(function(s){return s.lang===S.cur&&(SF==="all"||s.skills.indexOf(SF)>-1)});
@@ -146,10 +259,10 @@ function rSrc(){
   $("v-src").innerHTML=h;
 }
 function rRev(){
-  var el=$("v-rev"),k=counts();
-  if(!R.on){el.innerHTML='<div class="box y"><h2>Review</h2><p>'+k.d+' to review · '+k.n+' new</p>'+((k.d+k.n)?'<button class="btn" data-start="1">Start</button>':'<p>Nothing due. Add cards in Cards, or log your minutes in Today.</p>')+'</div>';return}
+  var el=$("v-rev"),k=counts(),u=(R.h&&R.h.length)?'<button class="ghost" data-undo="1">↶ Undo last grade</button>':'';
+  if(!R.on){el.innerHTML='<div class="box y"><h2>Review</h2><p>'+k.d+' to review · '+k.n+' new</p>'+((k.d+k.n)?'<button class="btn" data-start="1">Start</button> ':'<p>Nothing due. Add cards in Cards, or log your minutes in Today.</p>')+u+'</div>';return}
   var c=byId(R.q[0]);
-  var h='<p class="mute">'+R.q.length+' left</p><div class="box"><div class="big">'+esc(c.w)+'</div><button class="ghost" data-say="1" aria-label="Listen">🔊 Listen</button>';
+  var h='<div class="row"><span class="mute">'+R.q.length+' left</span>'+u+'</div><div class="box"><div class="big">'+esc(c.w)+'</div><button class="ghost" data-say="1" aria-label="Listen">🔊 Listen</button>';
   if(!R.show)h+='<div class="grid4" style="grid-template-columns:1fr"><button class="btn" data-show="1">Show answer</button></div>';
   else{h+='<p>'+(c.s?esc(c.s):'')+'</p><p><b>'+esc(c.t)+'</b></p>'+(c.r?'<p class="mute">Source: '+esc(c.r)+'</p>':'')+'<div class="grid4">';
     ["Again","Hard","Good","Easy"].forEach(function(n,g){var x=nxt(c,g);h+='<button class="'+(g?'btn':'ghost')+'" data-g="'+g+'">'+n+'<br>'+(g?lab(x.int):'now')+'</button>'});h+='</div>'}
@@ -159,14 +272,20 @@ function start(){
   var t=today(),k=counts(),m=mine();
   var d=m.filter(function(c){return c.seen&&c.due<=t}).sort(function(a,b){return a.due<b.due?-1:1}).map(function(c){return c.id});
   var n=m.filter(function(c){return !c.seen}).slice(0,k.n).map(function(c){return c.id});
-  R={on:true,q:d.concat(n),show:false};rRev();
+  R={on:true,q:d.concat(n),show:false,h:[]};rRev();
 }
 function grade(g){
-  var c=byId(R.q.shift()),x=nxt(c,g);
+  var c=byId(R.q[0]);R.h=R.h||[];R.h.push({c:JSON.parse(JSON.stringify(c)),q:R.q.slice()});if(R.h.length>30)R.h.shift();
+  R.q.shift();var x=nxt(c,g);
   if(!c.seen)c.seen=today();
   c.reps=x.reps;c.int=x.int;c.ease=x.ease;c.due=add(today(),x.int);
   if(g===0)R.q.push(c.id);
   R.show=false;if(!R.q.length)R.on=false;save();rRev();
+}
+function undo(){
+  var h=R.h&&R.h.pop();if(!h)return;
+  var c=byId(h.c.id);if(c)Object.assign(c,h.c);
+  R.q=h.q.filter(byId);R.on=R.q.length>0;R.show=false;save();rRev();
 }
 function tab(v){
   ["today","rev","cards","src","week"].forEach(function(x){$("v-"+x).hidden=x!==v});
@@ -186,31 +305,68 @@ document.addEventListener("click",function(e){
   if(t.closest("[data-show]")){R.show=true;rRev();return}
   if(t.closest("[data-say]")){var c=byId(R.q[0]);speak(c.w+(R.show&&c.s?". "+c.s:""));return}
   if(b=t.closest("[data-g]")){grade(+b.dataset.g);return}
-  if(b=t.closest("[data-del]")){var id=b.dataset.del;if(DEL===id){S.cards=S.cards.filter(function(c){return c.id!==id});DEL=null;save()}else DEL=id;rCards();return}
+  if(t.closest("[data-undo]")){undo();return}
+  if(b=t.closest("[data-ed]")){ED=b.dataset.ed;DEL=null;rCardList();return}
+  if(t.closest("[data-ce]")){ED=null;rCardList();return}
+  if(t.closest("[data-more]")){CL+=40;rCardList();return}
+  if(b=t.closest("[data-ct]")){CT=b.dataset.ct;CL=40;rCards();return}
+  if(b=t.closest("[data-del]")){var id=b.dataset.del;if(DEL===id){S.cards=S.cards.filter(function(c){return c.id!==id});DEL=null;save();rCards()}else{DEL=id;rCardList()}return}
   if(b=t.closest("[data-sdel]")){var sid=b.dataset.sdel;if(DEL===sid){S.src=S.src.filter(function(c){return c.id!==sid});DEL=null;save()}else DEL=sid;rSrc();return}
   if(b=t.closest("[data-sf]")){SF=b.dataset.sf;rSrc();return}
   if(t.closest("#al")){$("lf").hidden=!$("lf").hidden;return}
-  if(t.closest("#ex")){$("io").value=mine().map(function(c){return[c.w,c.s,c.t,c.r].map(function(x){return String(x||"").replace(/[;\n]/g,",")}).join(";")}).join("\n");$("io").select();return}
+  if(t.closest("#ex")){$("io").value=mine().map(function(c){return[c.w,c.s,c.t,c.r].map(function(x){return String(x||"").replace(/[;\n]/g,",")}).join(";")+";"+(c.g||[]).join("|")}).join("\n");$("io").select();return}
   if(t.closest("#im")){
-    $("io").value.split("\n").forEach(function(l,i){var p=l.split(";");if(p[0]&&p[2])S.cards.push({id:Date.now()+"-"+i,lang:S.cur,w:p[0].trim(),s:(p[1]||"").trim(),t:p[2].trim(),r:(p[3]||"").trim(),ease:2.5,int:0,reps:0,due:today(),seen:""})});
+    $("io").value.split("\n").forEach(function(l,i){var p=l.split(";");if(p[0]&&p[2])S.cards.push({id:Date.now()+"-"+i,lang:S.cur,w:p[0].trim(),s:(p[1]||"").trim(),t:p[2].trim(),r:(p[3]||"").trim(),g:tg(p[4]),ease:2.5,int:0,reps:0,due:today(),seen:""})});
     save();rCards();
   }
 });
+document.addEventListener("input",function(e){if(e.target.id==="cq"){CQ=e.target.value;CL=40;rCardList()}});
 document.addEventListener("change",function(e){
   var el=e.target;
-  if(el.id==="lang"){S.cur=el.value;R={on:false,q:[],show:false};save();tab(document.querySelector(".tabs .on").dataset.t)}
+  if(el.id==="lang"){S.cur=el.value;R={on:false,q:[],show:false,h:[]};CT="";CQ="";ED=null;save();tab(document.querySelector(".tabs .on").dataset.t)}
+  else if(el.id==="cstat"){CS=el.value;CL=40;rCardList()}
   else if(el.dataset&&el.dataset.ss){S.src.find(function(s){return s.id===el.dataset.ss}).status=el.value;save()}
 });
 document.addEventListener("submit",function(e){
   e.preventDefault();
   var id=e.target.id;
-  if(id==="lf"){var c=$("ls").value;if(c){S.langs[c]=1;S.cur=c;save();head();$("lf").hidden=true;tab("today")}}
-  if(id==="cf"){S.cards.push({id:String(Date.now()),lang:S.cur,w:$("cw").value.trim(),s:$("cs").value.trim(),t:$("ct").value.trim(),r:$("cr").value.trim(),ease:2.5,int:0,reps:0,due:today(),seen:""});save();rCards()}
+  if(id==="lf"){var c=$("ls").value;if(c){S.langs[c]=1;S.cur=c;norm();save();head();$("lf").hidden=true;tab("today")}}
+  if(id==="cf"){S.cards.push({id:String(Date.now()),lang:S.cur,w:$("cw").value.trim(),s:$("cs").value.trim(),t:$("ct").value.trim(),r:$("cr").value.trim(),g:tg($("cg").value),ease:2.5,int:0,reps:0,due:today(),seen:""});save();rCards()}
   if(id==="sf"){
     var u=$("su").value.trim(),sk=[].slice.call(document.querySelectorAll("[name=sk]:checked")).map(function(x){return x.value});
     if(u&&!/^https?:\/\//i.test(u))u="https://"+u;
     S.src.push({id:"s"+Date.now(),lang:S.cur,name:$("sn").value.trim(),url:u||"#",skills:sk.length?sk:["reading"],note:$("so").value.trim(),status:"to try"});save();rSrc();
   }
+});
+document.addEventListener("click",function(e){
+  var t=e.target,b;
+  if(b=t.closest("[data-ob]")){OB={d:today(),id:b.dataset.ob};rSheet();return}
+  if(!$("sheet").hidden&&OB){
+    if(t.id==="sheet"||t.closest("[data-sx]")){closeSheet();return}
+    if(b=t.closest("[data-bm]")){addMin(OB.d,OB.id,+b.dataset.bm);save();rSheet();return}
+    if(t.closest("[data-tm]")){if(TT){stopTimer();rSheet()}else{TM=Date.now();TT=setInterval(tick,1000);rSheet()}return}
+    if(b=t.closest("[data-dx]")){blg(OB.d,OB.id).extra.splice(+b.dataset.dx,1);save();rSheet();return}
+    if(t.closest("[data-go]")){closeSheet()}
+  }
+  if(b=t.closest("[data-pd]")){var key=b.dataset.pd;if(DEL===key){var pp=key.split("|");plan()[pp[0]].splice(+pp[1],1);DEL=null;save();rWeek()}else{DEL=key;rWeek()}return}
+});
+document.addEventListener("change",function(e){
+  var el=e.target,d=el.dataset||{};
+  if(OB&&!$("sheet").hidden){
+    if(d.bdone){blg(OB.d,OB.id).done=el.checked;save();rSheet();return}
+    if(d.bck!==undefined){var c=blg(OB.d,OB.id).ck,i=+d.bck,p=c.indexOf(i);if(el.checked&&p<0)c.push(i);if(!el.checked&&p>-1)c.splice(p,1);save();return}
+    if(d.bx!==undefined){blg(OB.d,OB.id).extra[+d.bx].done=el.checked;save();return}
+    if(d.bnote){blg(OB.d,OB.id).note=el.value;save();return}
+    if(d.bpm){var bk=curBlock();bk.min=Math.max(0,+el.value||0);save();rSheet();return}
+  }
+  if(d.pn){var p1=d.pn.split("|");plan()[p1[0]][+p1[1]].name=el.value.trim()||"Block";save();return}
+  if(d.pm){var q=d.pm.split("|");plan()[q[0]][+q[1]].min=Math.max(0,+el.value||0);save();rWeek();return}
+});
+document.addEventListener("submit",function(e){
+  var f=e.target,k=f.dataset.f;if(!k)return;e.preventDefault();
+  if(k==="bextra"){var tx=f.elements.tx.value.trim();if(tx&&OB){blg(OB.d,OB.id).extra.push({t:tx,done:false});save();rSheet()}}
+  if(k==="addblk"){var w=+f.dataset.w,nm=f.elements.nm.value.trim();if(nm){plan()[w].push({id:uid(),name:nm,min:+f.elements.mn.value||15,skills:f.elements.sk.value?[f.elements.sk.value]:[],steps:[]});save();rWeek()}}
+  if(k==="cedit"){var c=byId(f.dataset.id),x=f.elements;if(c){c.w=x.w.value.trim();c.s=x.s.value.trim();c.t=x.t.value.trim();c.r=x.r.value.trim();c.g=tg(x.g.value);ED=null;save();rCards()}}
 });
 var SYNC="mf9d6b2ffad88697b6002-idiomas";
 function setSync(t){var e=$("sync");if(e)e.textContent=t}
@@ -226,7 +382,7 @@ function pull(){
   sb.from("app_sync").select("value").eq("id",SYNC).maybeSingle().then(function(r){
     if(r.error){setSync("Offline · saved on this device");return}
     var rv=r.data&&r.data.value;
-    if(rv&&(rv._u||0)>(S._u||0)){S=rv;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}R={on:false,q:[],show:false};setSync("Synced");redraw()}
+    if(rv&&(rv._u||0)>(S._u||0)){S=rv;norm();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}R={on:false,q:[],show:false,h:[]};setSync("Synced");redraw()}
     else{S._u=S._u||Date.now();push()}
   });
 }
